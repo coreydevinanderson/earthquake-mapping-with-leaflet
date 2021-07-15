@@ -20,9 +20,13 @@ d3.json(queryUrl).then(function(quake) {
     
     var eq = quake.features;
 
-    // First get Array of all earthquake magnitudes
-    var allMag = eq.map(feature => feature.properties.mag);
-    var allMag_sorted = allMag.sort((a,b) => a-b); //Sort ascending
+
+    // Figure out the breaks for the choropleth like scheme using quartiles:
+    //-Start
+
+    // First get Array of all earthquake depths
+    var allDepth = eq.map(feature => feature.geometry.coordinates[2]);
+    var allDepth_sorted = allDepth.sort((a,b) => a-b); //Sort ascending
           
     // Make array of quantiles.
     my_quants = [0, 0.25, 0.50, 0.75, 1]
@@ -31,55 +35,65 @@ d3.json(queryUrl).then(function(quake) {
     my_breaks = []
     
     my_quants.forEach(function(quant){
-        my_breaks.push(d3.quantile(allMag_sorted, quant));
+        my_breaks.push(d3.quantile(allDepth_sorted, quant));
     })
 
     // For book-keeping purposes.
-    console.log(my_breaks);
+    console.log("Quartiles for earthquake depth: " + my_breaks);
+    //-End
 
-    // Now loop over the features, one by one.
+
+    // Now make the point layer representing earthquake locations and magnitude (as relative size) and depth as color
+    //-Start
+    
+    // Loop with index to grab geometry and corresponding magnitude
     for (var i = 0; i < eq.length; i++){
         
         var lat = eq[i].geometry.coordinates[1];
         var lon = eq[i].geometry.coordinates[0];
+        var depth = eq[i].geometry.coordinates[2];
         var mag = eq[i].properties.mag;
 
-        var color = "";
+        var color = ""; // based on depth (in km)
 
-        if (mag >= 2){
+        if (depth >= 12.4){
             color = "red";
-        } else if (mag >= 1.33) {
+        } else if (depth >= 7.1) {
             color  = "orange";
-        } else if (mag > 0.81) {
+        } else if (depth > 3.1) {
             color = "yellow";
-        } else if (mag >= -1.2) {
+        } else if (depth >= -3.4) {
             color = "green";
         }
-
-        console.log(color);
 
         L.circleMarker([lat, lon], {
                 stroke: true,
                 fillOpacity: 0.75,
                 color: "black",
-                fillColor:color,
+                fillColor: color,
                 radius: mag * 2,
                 weight: 0.5
         }).addTo(myMap);
     };
+    //-End
 
-    // var my_colors = ["green", "yellow", "orange", "red"];
-    var categories = ['-1.20 to 0.81','0.81 to 1.33','1.33 to 2.00','2.00 to 6.50'];
-    
+
+    // Make legend:
+    //-Start
     var legend = L.control({position: "bottomleft"});
     
     legend.onAdd = function() {
-        var div = L.DomUtil.create('div', 'legend');
-        div.innerHTML += "<h4>Magnitude</h4>";
-        div.innerHTML += "<i style=background:red></i>,<span>" + categories[0] + "</span><br>";
+        var div = L.DomUtil.create('div', 'info legend');
+            var my_colors = ['green', 'yellow', 'orange', 'red'];
+            var categories = ['-3.4 to 3.1','3.1 to 7.1','7.1 to 12.4','12.4 to 635.0'];
+        div.innerHTML += '<h4>Depth (in km)</h4>'
+        for (var j = 0; j < my_colors.length; j++) {
+            div.innerHTML +=
+                '<i class = "circle" style = "background:' + my_colors[j] + '"></i> ' + (categories[j] ? categories[j] + '<br>' : '+');
+        }  
     return div;
-    }
+    };
     legend.addTo(myMap);
-
+    //-End
 });
 
