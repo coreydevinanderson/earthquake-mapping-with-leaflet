@@ -13,3 +13,7 @@ The data are pulled directly from the last seven day link in:
 https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php
 
 Some extra styling for legend was done in css.
+
+----
+
+All code was written by Corey D. Anderson
