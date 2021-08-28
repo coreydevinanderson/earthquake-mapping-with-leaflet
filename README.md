@@ -1,4 +1,4 @@
-<strong> This repository contains code to make a simple map of earthquake location magnitude data with Leaflet.js. </strong>
+<strong> This repository contains code to make a simple map of earthquake locations and magnitudes data with Leaflet.js. </strong>
 
 ----
 
